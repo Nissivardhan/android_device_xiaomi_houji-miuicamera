@@ -1,0 +1,17 @@
+# Google Lens
+ro.com.google.lens.oem_camera_package=com.android.camera
+
+# Framework allowlists
+persist.vendor.camera.privapp.list=com.android.camera,org.lineageos.aperture
+
+# MiuiCamera
+ro.miui.notch=1
+ro.miui.build.region=CN
+ro.miui.ui.version.name=V816
+ro.miui.ui.version.code=816
+
+# Device Capabilities
+ro.product.mod_device=shennong
+ro.hardware.camera=xiaomi
+ro.product.brand=xiaomi
+ro.product.manufacturer=xiaomi

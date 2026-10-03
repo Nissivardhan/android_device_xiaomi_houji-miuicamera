@@ -1,0 +1,26 @@
+From: CN MrLin <cnmrlin@users.noreply.github.com>
+Subject: [PATCH] Preserve SR preview target removal
+
+Remove the preview target within the existing SR branch without requiring
+the additional disableRtStreamForSrRequired capability flag.
+
+---
+ smali_classes2/Z5/r0.smali | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/smali_classes2/Z5/r0.smali b/smali_classes2/Z5/r0.smali
+--- a/smali_classes2/Z5/r0.smali
++++ b/smali_classes2/Z5/r0.smali
+@@ -4002,12 +4002,6 @@
+ 
+     iget-object v0, p3, LZ5/a0;->E:LZ5/e;
+ 
+-    invoke-static {v0}, LZ5/f;->c(LZ5/e;)Z
+-
+-    move-result v1
+-
+-    if-eqz v1, :cond_55
+-
+     iget-object v1, p3, LZ5/a0;->D:LZ5/H0;
+ 
+     iget-object v1, v1, LZ5/H0;->f:Landroid/media/ImageReader;

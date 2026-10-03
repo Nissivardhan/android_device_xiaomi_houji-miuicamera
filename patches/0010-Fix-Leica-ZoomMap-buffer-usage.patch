@@ -1,0 +1,86 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: CN MrLin <cnmrlin@users.noreply.github.com>
+Date: Tue, 25 Aug 2026 01:30:00 +0800
+Subject: [PATCH] Leica camera: Fix ZoomMap buffer usage
+
+---
+ smali_classes2/Y5/i.smali                         |  2 ++
+ .../android/camera/compat/ZoomMapUsage.smali     | 53 ++++++++++++++++++
+ 2 files changed, 55 insertions(+)
+ create mode 100644 smali_classes2/com/android/camera/compat/ZoomMapUsage.smali
+
+diff --git a/smali_classes2/Y5/i.smali b/smali_classes2/Y5/i.smali
+index 11111111..22222222 100644
+--- a/smali_classes2/Y5/i.smali
++++ b/smali_classes2/Y5/i.smali
+@@ -903,9 +903,11 @@
+     move-result v3
+ 
+     invoke-virtual {v0, v2, v3}, Landroid/graphics/SurfaceTexture;->setDefaultBufferSize(II)V
+ 
++    invoke-static {v0}, Lcom/android/camera/compat/ZoomMapUsage;->apply(Landroid/graphics/SurfaceTexture;)V
++
+     new-instance v0, Landroid/view/Surface;
+ 
+     iget-object v2, p0, LY5/i;->a:Landroid/graphics/SurfaceTexture;
+ 
+     invoke-direct {v0, v2}, Landroid/view/Surface;-><init>(Landroid/graphics/SurfaceTexture;)V
+diff --git a/smali_classes2/com/android/camera/compat/ZoomMapUsage.smali b/smali_classes2/com/android/camera/compat/ZoomMapUsage.smali
+new file mode 100644
+index 00000000..33333333
+--- /dev/null
++++ b/smali_classes2/com/android/camera/compat/ZoomMapUsage.smali
+@@ -0,0 +1,53 @@
++.class public final Lcom/android/camera/compat/ZoomMapUsage;
++.super Ljava/lang/Object;
++.source "SourceFile"
++
++
++.method static constructor <clinit>()V
++    .registers 3
++
++    :try_start_0
++    const-string v0, "camera_algoup_jni.xiaomi"
++
++    invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V
++    :try_end_5
++    .catch Ljava/lang/Throwable; {:try_start_0 .. :try_end_5} :catch_6
++
++    return-void
++
++    :catch_6
++    move-exception v0
++
++    const-string v1, "ZoomMapUsage"
++
++    const-string v2, "Unable to load ZoomMap bridge"
++
++    invoke-static {v1, v2, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    return-void
++.end method
++
++.method public static apply(Landroid/graphics/SurfaceTexture;)V
++    .registers 4
++
++    :try_start_0
++    invoke-static {p0}, Lcom/android/camera/compat/ZoomMapUsage;->setCameraOutputUsage(Landroid/graphics/SurfaceTexture;)I
++    :try_end_3
++    .catch Ljava/lang/Throwable; {:try_start_0 .. :try_end_3} :catch_4
++
++    return-void
++
++    :catch_4
++    move-exception p0
++
++    const-string v0, "ZoomMapUsage"
++
++    const-string v1, "Unable to set ZoomMap usage"
++
++    invoke-static {v0, v1, p0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
++
++    return-void
++.end method
++
++.method private static native setCameraOutputUsage(Landroid/graphics/SurfaceTexture;)I
++.end method

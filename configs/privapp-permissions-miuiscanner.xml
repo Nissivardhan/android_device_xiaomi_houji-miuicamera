@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The LineageOS Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<permissions>
+    <privapp-permissions package="com.xiaomi.scanner">
+        <permission name="android.permission.CHANGE_CONFIGURATION" />
+        <permission name="android.permission.PACKAGE_USAGE_STATS" />
+        <permission name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
+        <permission name="android.permission.START_ACTIVITIES_FROM_BACKGROUND" />
+        <permission name="android.permission.STATUS_BAR" />
+        <permission name="android.permission.SUBSCRIBE_TO_KEYGUARD_LOCKED_STATE" />
+        <permission name="android.permission.WRITE_SECURE_SETTINGS" />
+    </privapp-permissions>
+</permissions>

@@ -1,0 +1,24 @@
+From e5d68d44fd9bea75b0384bed3686fbfc4b30b5fa Mon Sep 17 00:00:00 2001
+From: Oliwier Krawczyk <36317711+TheMysticle@users.noreply.github.com>
+Date: Wed, 24 Jun 2026 12:17:34 +0200
+Subject: [PATCH 5/7] Stop setting NAL length-prefixed encoder output
+
+---
+ smali_classes2/Hb/g.smali | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/smali_classes2/Hb/g.smali b/smali_classes2/Hb/g.smali
+index 99153b8f..9fe46479 100644
+--- a/smali_classes2/Hb/g.smali
++++ b/smali_classes2/Hb/g.smali
+@@ -713,7 +713,7 @@
+
+     iget-boolean v7, v4, LHb/r;->y:Z
+
+-    if-eqz v7, :cond_17
++    goto :cond_17
+ 
+     iget v7, v4, LHb/r;->l:I
+ 
+-- 
+2.54.0

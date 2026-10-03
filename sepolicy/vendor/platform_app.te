@@ -1,0 +1,41 @@
+# MiuiCamera runs in platform_app (targetSdk < 37) or platform_app_36
+# depending on the platform; grant both domains the access it needs.
+
+allow { platform_app platform_app_36 } app_data_file:file execute;
+allow { platform_app platform_app_36 } vendor_hal_camerapostproc_xiaomi_hwservice:hwservice_manager find;
+
+binder_call(hal_camera_default, { platform_app platform_app_36 })
+
+get_prop({ platform_app platform_app_36 }, vendor_camera_prop)
+get_prop({ platform_app platform_app_36 }, vendor_fp_prop)
+get_prop({ platform_app platform_app_36 }, vendor_display_prop)
+
+allow { platform_app platform_app_36 } hal_misys_service:service_manager find;
+
+allow { platform_app platform_app_36 } proc_pressure_mem:file r_file_perms;
+allow { platform_app platform_app_36 } proc_pressure_cpu:file r_file_perms;
+allow { platform_app platform_app_36 } proc_pressure_io:file r_file_perms;
+
+# Camera
+allow { platform_app platform_app_36 } adsprpcd_file:dir { getattr search read watch };
+allow { platform_app platform_app_36 } hal_aidlbgservice_service:service_manager find;
+binder_call({ platform_app platform_app_36 }, hal_camera_default)
+allow { platform_app platform_app_36 } hal_camera_default:fd *;
+allow { platform_app platform_app_36 } hal_quickcamera:binder { call transfer };
+allow { platform_app platform_app_36 } hal_quickcamera:fd *;
+allow { platform_app platform_app_36 } vendor_file:dir { watch };
+allow { platform_app platform_app_36 } vendor_hal_camerapostproc_xiaomi:binder { call transfer };
+allow { platform_app platform_app_36 } vendor_hal_camerapostproc_xiaomi:fd *;
+get_prop({ platform_app platform_app_36 }, qemu_hw_prop)
+get_prop({ platform_app platform_app_36 }, vendor_camera_sensor_prop)
+get_prop({ platform_app platform_app_36 }, vendor_camera_p3enable_prop)
+
+hal_client_domain(platform_app, vendor_hal_camerapostproc_xiaomi)
+hal_client_domain(platform_app_36, vendor_hal_camerapostproc_xiaomi)
+hal_client_domain(platform_app, hal_quickcamera)
+hal_client_domain(platform_app_36, hal_quickcamera)
+hal_client_domain(platform_app, vendor_hal_dspmanager)
+hal_client_domain(platform_app_36, vendor_hal_dspmanager)
+hal_client_domain(platform_app_36, vendor_hal_qspmhal)
+
+dontaudit hal_camera_default shell_data_file:dir search;

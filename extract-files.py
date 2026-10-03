@@ -1,0 +1,147 @@
+#!/usr/bin/env -S PYTHONPATH=../../../tools/extract-utils python3
+#
+# SPDX-FileCopyrightText: 2024 The LineageOS Project
+# SPDX-License-Identifier: Apache-2.0
+#
+
+import hashlib
+import os
+import stat
+from pathlib import Path
+
+from extract_utils.fixups_blob import (
+    BlobFixupCtx,
+    File,
+    blob_fixup,
+    blob_fixups_user_type,
+)
+from extract_utils.fixups_lib import (
+    lib_fixups,
+    lib_fixups_user_type,
+)
+from extract_utils.main import (
+    ExtractUtils,
+    ExtractUtilsModule,
+)
+from extract_utils.tools import patchelf_version_path_map
+from extract_utils.utils import (
+    Color,
+    color_print,
+    run_cmd,
+)
+
+namespace_imports = [
+    'device/xiaomi/houji-miuicamera',
+    'vendor/xiaomi/houji',
+]
+
+
+def lib_fixup_system_suffix(lib: str, partition: str, *args, **kwargs):
+    return f'{lib}_{partition}' if partition == 'system' else None
+
+
+lib_fixups: lib_fixups_user_type = {
+    **lib_fixups,
+    'vendor.xiaomi.hardware.campostproc@1.0': lib_fixup_system_suffix,
+}
+
+def blob_fixup_split_file(
+    ctx: 'BlobFixupCtx',
+    file: 'File',
+    file_path: str,
+    *args,
+    **kwargs,
+):
+    # Split the file into parts
+    part_size = 51380224 # 49 MiB
+    part_number = 0
+    with open(file_path, 'rb') as f:
+        while chunk := f.read(part_size):
+            part_file_name = f"{file_path}.part{part_number:02d}"
+            with open(part_file_name, 'wb') as part_file:
+                part_file.write(chunk)
+            part_number += 1
+    color_print(f'{file.dst}: split into {part_number} parts', color=Color.GREEN)
+
+    # Add the file to .gitignore
+    gitignore_path = os.path.join(module.vendor_path, '.gitignore')
+    with open(gitignore_path, 'a+') as gitignore_file:
+        gitignore_file.seek(0)  # Move to the start of the file
+        existing_entries = gitignore_file.read().splitlines()
+        if f'proprietary/{file.dst}' not in existing_entries:
+            gitignore_file.write(f'proprietary/{file.dst}\n')
+            color_print(f'{file.dst}: added to .gitignore', color=Color.GREEN)
+
+
+def blob_fixup_ts_graphicbuffer(
+    ctx: BlobFixupCtx,
+    file: File,
+    file_path: str,
+    *args,
+    tmp_dir: str,
+    **kwargs,
+):
+    original_hash = '455054546e126fd58c9c792b245e9891235ce26153df4237ed10d3f856cca951'
+    patched_hash = '635d9e36376a32b7b54f2c81f5b3af6f55b8c628b8b6cef655ca7a7d16ae015c'
+    blob_path = Path(file_path)
+    current_hash = hashlib.sha256(blob_path.read_bytes()).hexdigest()
+    if current_hash == patched_hash:
+        return
+    if current_hash != original_hash:
+        raise ValueError(
+            f'{file.dst}: unknown TS blob; verify its allocations before applying the shim'
+        )
+
+    symbols_path = Path(tmp_dir) / 'ts-symbols.map'
+    symbols_path.write_text('_Znwm miui_ts_operator_new\n')
+    run_cmd([
+        patchelf_version_path_map['0_18'],
+        '--rename-dynamic-symbols', str(symbols_path),
+        '--add-needed', 'libts_graphicbuffer_shim.so',
+        '--set-rpath', '$ORIGIN',
+        file_path,
+    ])
+    if hashlib.sha256(blob_path.read_bytes()).hexdigest() != patched_hash:
+        raise ValueError(f'{file.dst}: unexpected TS shim fixup output')
+
+
+blob_fixups: blob_fixups_user_type = {
+    'odm/lib64/camera/components/com.mi.node.tsskinbeautifier.so': blob_fixup()
+        .call(blob_fixup_ts_graphicbuffer),
+    'system/lib64/libcamera_algoup_jni.xiaomi.so': blob_fixup()
+        .add_needed('libgui_shim_miuicamera.so')
+        .sig_replace('08 AD 40 F9', '08 A9 40 F9'),
+    'system/lib64/libcamera_mianode_jni.xiaomi.so': blob_fixup()
+        .add_needed('libgui_shim_miuicamera.so'),
+    'system/lib64/libmicampostproc_client.so': blob_fixup()
+        .remove_needed('libhidltransport.so'),
+    'system/priv-app/MiuiCamera/MiuiCamera.apk': blob_fixup()
+        .apktool_patch('patches')
+        .call(blob_fixup_split_file),
+}  # fmt: skip
+
+module = ExtractUtilsModule(
+    'houji-miuicamera',
+    'xiaomi',
+    blob_fixups=blob_fixups,
+    lib_fixups=lib_fixups,
+    namespace_imports=namespace_imports,
+)
+
+def generate_vendorsetup_script():
+    vendorsetup_path = os.path.join(module.vendor_path, "vendorsetup.sh")
+    with open(vendorsetup_path, 'w') as setup_file:
+        setup_file.write('#!/bin/bash\n')
+        setup_file.write('# Script to dynamically reassemble .part* files\n\n')
+        setup_file.write(f'for file in $(find \"{module.vendor_rel_path}\" -type f -name \"*.part00\"); do\n')
+        setup_file.write('    base_name=${file%.part00}\n')
+        setup_file.write('    cat ${base_name}.part* > $base_name\n')
+        setup_file.write('    echo \"Reassembly of $base_name complete!\"\n')
+        setup_file.write('done\n')
+    os.chmod(vendorsetup_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+    color_print(f'Generated dynamic reassembly script: vendorsetup.sh', color=Color.END)
+
+if __name__ == '__main__':
+    utils = ExtractUtils.device(module)
+    utils.run()
+    generate_vendorsetup_script()

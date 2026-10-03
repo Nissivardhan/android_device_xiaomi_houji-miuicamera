@@ -1,0 +1,20 @@
+From: CN MrLin <cnmrlin@users.noreply.github.com>
+Subject: [PATCH] Preserve client name in MIVI capture requests
+
+The image receiver bypasses the main request builder. Supply the same
+client name so its first capture does not remove a session parameter
+and trigger an unnecessary HAL reconfiguration.
+
+---
+diff --git a/smali_classes5/com/xiaomi/camera/mivi/qcom/MockCameraImageReceiver.smali b/smali_classes5/com/xiaomi/camera/mivi/qcom/MockCameraImageReceiver.smali
+--- a/smali_classes5/com/xiaomi/camera/mivi/qcom/MockCameraImageReceiver.smali
++++ b/smali_classes5/com/xiaomi/camera/mivi/qcom/MockCameraImageReceiver.smali
+@@ -2718,6 +2718,8 @@
+ 
+     move-result-object v2
+ 
++    invoke-static {v2}, Lcom/android/camera/compat/LeicaClientName;->a(Landroid/hardware/camera2/CaptureRequest$Builder;)V
++
+     iget-object v4, p0, Lcom/xiaomi/camera/mivi/qcom/MockCameraImageReceiver;->mImageReaderList:Ljava/util/List;
+ 
+     invoke-interface {v4}, Ljava/util/List;->iterator()Ljava/util/Iterator;

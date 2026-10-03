@@ -1,0 +1,38 @@
+//
+// Copyright (C) 2022 The LineageOS Project
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+cc_library_shared {
+    name: "libts_graphicbuffer_shim",
+    device_specific: true,
+    compile_multilib: "64",
+    relative_install_path: "camera/components",
+    srcs: ["ts_graphicbuffer_shim.cpp"],
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-fvisibility=hidden",
+    ],
+    shared_libs: [
+        "libui",
+        "libutils",
+    ],
+}
+
+cc_library {
+    name: "libgui_shim_miuicamera",
+    srcs: [
+        "libgui_shim_miuicamera.c",
+        "zoommap_usage.cpp",
+    ],
+    header_libs: ["libhardware_headers"],
+    shared_libs: [
+        "libandroid_runtime",
+        "libgui",
+        "liblog",
+        "libnativedisplay",
+        "libutils",
+    ],
+}

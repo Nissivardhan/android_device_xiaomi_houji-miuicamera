@@ -1,0 +1,5 @@
+binder_call(hal_quickcamera_client, hal_quickcamera_server)
+binder_call(hal_quickcamera_server, hal_quickcamera_client)
+
+allow hal_quickcamera { platform_app platform_app_36 system_app }:binder { call transfer };
+allow hal_quickcamera { platform_app platform_app_36 system_app }:fd use;
